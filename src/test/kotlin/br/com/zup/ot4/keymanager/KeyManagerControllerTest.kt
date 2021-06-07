@@ -1,11 +1,9 @@
 package br.com.zup.ot4.keymanager
 
-import br.com.zup.ot4.AccountType
-import br.com.zup.ot4.KeyManagerServiceGrpc
-import br.com.zup.ot4.PixKeyRequest
-import br.com.zup.ot4.PixKeyResponse
+import br.com.zup.ot4.*
 import br.com.zup.ot4.keymanager.registry.KeyPostRequest
 import br.com.zup.ot4.keymanager.registry.KeyTypeRequest
+import br.com.zup.ot4.keymanager.remove.KeyDeleteRequest
 import br.com.zup.ot4.shared.grpc.GrpcClientFactory
 import io.micronaut.context.annotation.Factory
 import io.micronaut.context.annotation.Replaces
@@ -29,7 +27,7 @@ internal class KeyManagerControllerTest(
 ){
 
     @field:Inject
-    lateinit var registryStub: KeyManagerServiceGrpc.KeyManagerServiceBlockingStub
+    lateinit var keyManagerStub: KeyManagerServiceGrpc.KeyManagerServiceBlockingStub
 
     @field:Inject
     @field:Client("/")
@@ -44,7 +42,7 @@ internal class KeyManagerControllerTest(
             .setPixId(pixId)
             .build()
 
-        `when`(registryStub.register(any(PixKeyRequest::class.java))).thenReturn(responseGrpc)
+        `when`(keyManagerStub.register(any(PixKeyRequest::class.java))).thenReturn(responseGrpc)
 
         val newPixKey = KeyPostRequest(accountType = AccountType.CONTA_CORRENTE,
                                         key = "teste@teste.com.br",
@@ -54,6 +52,23 @@ internal class KeyManagerControllerTest(
         val response = client.toBlocking().exchange(request, KeyPostRequest::class.java)
 
         assertEquals(HttpStatus.CREATED, response.status)
+    }
+
+    @Test
+    internal fun `deve remover uma chave pix existente`() {
+        val clientId = UUID.randomUUID().toString()
+        val pixId = UUID.randomUUID().toString()
+
+        val responseGrpc = RemoveKeyResponse.newBuilder()
+            .setSuccess(true)
+            .build()
+
+        `when`(keyManagerStub.remove(any(RemoveKeyRequest::class.java))).thenReturn(responseGrpc)
+
+        val request = HttpRequest.DELETE<Any>("/api/v1/clientes/$clientId/pix", KeyDeleteRequest(pixId))
+        val response = client.toBlocking().exchange(request, Any::class.java)
+
+        assertEquals(HttpStatus.OK, response.status)
     }
 
     @Factory

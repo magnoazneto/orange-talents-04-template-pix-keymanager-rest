@@ -41,7 +41,7 @@ internal class GlobalExceptionHandlerTest {
     @Test
     internal fun `deve retornar 400 quando statusException for invalid argument`() {
         val message = "dados invalidos"
-        val invalidArgumentException = StatusRuntimeException(Status.INVALID_ARGUMENT
+        val invalidArgumentException = StatusRuntimeException(Status.ALREADY_EXISTS
             .withDescription(message))
 
         val response = GlobalExceptionHandler().handle(genericRequest, invalidArgumentException)
