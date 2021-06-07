@@ -2,9 +2,11 @@ package br.com.zup.ot4.keymanager
 
 import br.com.zup.ot4.KeyManagerServiceGrpc
 import br.com.zup.ot4.keymanager.registry.KeyPostRequest
+import br.com.zup.ot4.keymanager.remove.KeyDeleteRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Post
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
@@ -25,9 +27,18 @@ class KeyManagerController(
     fun register(clientId: UUID, @Valid @Body request: KeyPostRequest): HttpResponse<Any>{
         val grpcRequest = request.toGrpcRequest(clientId)
 
-        LOGGER.info("[$clientId] criando nova chave pix com $request")
         val grpcResponse = grpcClient.register(grpcRequest)
+        LOGGER.info("[$clientId] -> nova chave pix criada com $request")
         return HttpResponse.created(location(clientId, grpcResponse.pixId))
+    }
+
+    @Delete("/pix")
+    fun remove(clientId: UUID, @Body request: KeyDeleteRequest): HttpResponse<Any> {
+        val grpcRequest = request.toGrpcRequest(clientId.toString())
+
+        grpcClient.remove(grpcRequest)
+        LOGGER.info("removendo chave pix: ${request.pixId}")
+        return HttpResponse.ok()
     }
 
     private fun location(clientId: UUID, pixId: String) = HttpResponse

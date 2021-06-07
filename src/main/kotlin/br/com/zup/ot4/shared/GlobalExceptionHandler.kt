@@ -21,6 +21,7 @@ class GlobalExceptionHandler : ExceptionHandler<StatusRuntimeException, HttpResp
         val (httpStatus, message) = when(statusCode){
             Status.NOT_FOUND.code -> Pair(HttpStatus.NOT_FOUND, statusDescription)
             Status.INVALID_ARGUMENT.code -> Pair(HttpStatus.BAD_REQUEST, statusDescription)
+            Status.FAILED_PRECONDITION.code -> Pair(HttpStatus.BAD_REQUEST, statusDescription)
             Status.ALREADY_EXISTS.code -> Pair(HttpStatus.UNPROCESSABLE_ENTITY, statusDescription)
             else -> {
                 LOGGER.error("Erro inesperado '${exception.javaClass.name}' ao tentar processar requisicao", exception)
