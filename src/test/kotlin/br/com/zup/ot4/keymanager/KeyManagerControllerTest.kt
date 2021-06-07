@@ -4,15 +4,18 @@ import br.com.zup.ot4.*
 import br.com.zup.ot4.keymanager.registry.KeyPostRequest
 import br.com.zup.ot4.keymanager.registry.KeyTypeRequest
 import br.com.zup.ot4.keymanager.remove.KeyDeleteRequest
+import br.com.zup.ot4.keymanager.search.PixKeyDetailsResponse
 import br.com.zup.ot4.shared.grpc.GrpcClientFactory
 import io.micronaut.context.annotation.Factory
 import io.micronaut.context.annotation.Replaces
 import io.micronaut.http.HttpRequest
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
@@ -26,6 +29,9 @@ internal class KeyManagerControllerTest(
 
 ){
 
+    private lateinit var clientId: String
+    private lateinit var pixId: String
+
     @field:Inject
     lateinit var keyManagerStub: KeyManagerServiceGrpc.KeyManagerServiceBlockingStub
 
@@ -33,10 +39,14 @@ internal class KeyManagerControllerTest(
     @field:Client("/")
     lateinit var client: HttpClient
 
+    @BeforeEach
+    internal fun setUp() {
+        clientId = UUID.randomUUID().toString()
+        pixId = UUID.randomUUID().toString()
+    }
+
     @Test
     fun `deve registrar uma nova chave pix`() {
-        val clientId = UUID.randomUUID().toString()
-        val pixId = UUID.randomUUID().toString()
 
         val responseGrpc = PixKeyResponse.newBuilder()
             .setPixId(pixId)
@@ -56,8 +66,6 @@ internal class KeyManagerControllerTest(
 
     @Test
     internal fun `deve remover uma chave pix existente`() {
-        val clientId = UUID.randomUUID().toString()
-        val pixId = UUID.randomUUID().toString()
 
         val responseGrpc = RemoveKeyResponse.newBuilder()
             .setSuccess(true)
@@ -69,6 +77,32 @@ internal class KeyManagerControllerTest(
         val response = client.toBlocking().exchange(request, Any::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
+    }
+
+    @Test
+    internal fun `deve retornar chave pix por PixID e ClientId`() {
+        val responseGrpc = SearchKeyResponse.newBuilder()
+            .setExternalClientId(clientId)
+            .setPixId(pixId)
+            .setKeyType(KeyType.EMAIL)
+            .setKey("teste@gmail.com")
+            .setOwnerName("magno")
+            .setOwnerCpf("00000000000")
+            .setAccountData(AccountData.newBuilder()
+                .setOrganizationName("ITAU UNIBANCO")
+                .setBranch("1234")
+                .setAccountNumber("5432")
+                .setAccountType(AccountType.CONTA_CORRENTE).build())
+            .build()
+
+        `when`(keyManagerStub.search(any(SearchKeyRequest::class.java))).thenReturn(responseGrpc)
+
+        val request = HttpRequest.GET<Any>("/api/v1/clientes/${clientId}/pix?pixId=$pixId")
+        val response = client.toBlocking().exchange(request, PixKeyDetailsResponse::class.java)
+
+        assertEquals(HttpStatus.OK, response.status)
+        assertEquals(pixId, response.body()!!.pixId)
+        assertEquals("teste@gmail.com", response.body()!!.key)
     }
 
     @Factory
