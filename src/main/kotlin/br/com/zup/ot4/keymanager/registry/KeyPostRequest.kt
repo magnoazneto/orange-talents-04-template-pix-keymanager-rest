@@ -43,10 +43,7 @@ enum class KeyTypeRequest(val grpcType: KeyType){
         override fun validate(key: String?): Boolean {
             if(key.isNullOrBlank()) return false
 
-            return EmailValidator().run {
-                initialize(null)
-                isValid(key, null)
-            }
+            return key.matches("^[a-z0-9.]+@[a-z0-9]+\\.[a-z]+\\.?([a-z]+)?\$".toRegex())
         }
     },
 

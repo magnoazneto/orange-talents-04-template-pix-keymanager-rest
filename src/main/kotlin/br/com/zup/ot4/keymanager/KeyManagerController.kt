@@ -1,18 +1,11 @@
 package br.com.zup.ot4.keymanager
 
 import br.com.zup.ot4.KeyManagerServiceGrpc
-import br.com.zup.ot4.PixKeyRequest
-import br.com.zup.ot4.PixKeyResponse
 import br.com.zup.ot4.keymanager.registry.KeyPostRequest
-import br.com.zup.ot4.keymanager.registry.KeyPostResponse
-import io.grpc.Status
-import io.grpc.StatusRuntimeException
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Post
-import io.micronaut.http.exceptions.HttpStatusException
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
 import java.util.*

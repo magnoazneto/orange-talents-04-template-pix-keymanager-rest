@@ -41,6 +41,7 @@ dependencies {
 
     testImplementation("io.micronaut:micronaut-http-client")
     implementation("br.com.caelum.stella:caelum-stella-core:2.1.2")
+    testImplementation("org.mockito:mockito-core:3.8.0")
 
 }
 
