@@ -50,7 +50,7 @@ internal class KeyManagerControllerTest(
     }
 
     @Test
-    fun `deve registrar uma nova chave pix`() {
+    fun `deve registrar uma nova chave pix com chave valida`() {
 
         val responseGrpc = PixKeyResponse.newBuilder()
             .setPixId(pixId)
@@ -61,6 +61,25 @@ internal class KeyManagerControllerTest(
         val newPixKey = KeyPostRequest(accountType = AccountType.CONTA_CORRENTE,
                                         key = "teste@teste.com.br",
                                         keyType = KeyTypeRequest.EMAIL)
+
+        val request = HttpRequest.POST("/api/v1/clientes/$clientId/pix", newPixKey)
+        val response = client.toBlocking().exchange(request, KeyPostRequest::class.java)
+
+        assertEquals(HttpStatus.CREATED, response.status)
+    }
+
+    @Test
+    fun `deve registrar uma nova chave pix random`() {
+
+        val responseGrpc = PixKeyResponse.newBuilder()
+            .setPixId(pixId)
+            .build()
+
+        `when`(keyManagerStub.register(any(PixKeyRequest::class.java))).thenReturn(responseGrpc)
+
+        val newPixKey = KeyPostRequest(accountType = AccountType.CONTA_CORRENTE,
+            key = null,
+            keyType = KeyTypeRequest.RANDOM_KEY)
 
         val request = HttpRequest.POST("/api/v1/clientes/$clientId/pix", newPixKey)
         val response = client.toBlocking().exchange(request, KeyPostRequest::class.java)
