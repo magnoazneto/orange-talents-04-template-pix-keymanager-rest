@@ -1,10 +1,12 @@
 package br.com.zup.ot4.keymanager
 
 import br.com.zup.ot4.KeyManagerServiceGrpc
+import br.com.zup.ot4.SearchAllRequest
 import br.com.zup.ot4.SearchKeyRequest
 import br.com.zup.ot4.keymanager.registry.KeyPostRequest
 import br.com.zup.ot4.keymanager.remove.KeyDeleteRequest
 import br.com.zup.ot4.keymanager.search.PixKeyDetailsResponse
+import br.com.zup.ot4.keymanager.search.PixKeyInfo
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import io.micronaut.validation.Validated
@@ -22,7 +24,16 @@ class KeyManagerController(
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
     @Get("/{clientId}/pix")
-    fun search(@QueryValue pixId: String, @PathVariable clientId: String) : HttpResponse<Any> {
+    fun search(@QueryValue(defaultValue = "") pixId: String, @PathVariable clientId: String) : HttpResponse<Any> {
+        if(pixId.isBlank()){
+            val grpcResponse = grpcClient.searchAll(SearchAllRequest.newBuilder()
+                .setExternalClientId(clientId).build())
+
+            val response = grpcResponse.keysList.map { PixKeyInfo(it) }
+
+            return HttpResponse.ok(response)
+        }
+
         val grpcResponse = grpcClient.search(
             SearchKeyRequest.newBuilder()
                 .setPixData(
@@ -33,7 +44,6 @@ class KeyManagerController(
                 )
                 .build()
         )
-
         return HttpResponse.ok(PixKeyDetailsResponse.of(grpcResponse))
     }
 

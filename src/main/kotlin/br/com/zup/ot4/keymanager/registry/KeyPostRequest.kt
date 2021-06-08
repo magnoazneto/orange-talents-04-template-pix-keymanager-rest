@@ -22,7 +22,7 @@ data class KeyPostRequest(
         return PixKeyRequest.newBuilder()
             .setAccountType(accountType)
             .setKeyType(keyType.grpcType)
-            .setPixKey(key)
+            .setPixKey(key ?: "")
             .setExternalClientId(clientId.toString())
             .build()
     }
